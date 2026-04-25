@@ -7,8 +7,8 @@ uv run train_single.py \
     -m EleutherAI/pythia-160m \
     --dtype fp32 \
     -s 512 \
-    --batch-size 16 \
-    --num-epochs 5
+    --batch-size 256 \
+    --num-epochs 1
 echo -e "===============================\nFinished experiment\tfp32\n"
 # 2. bf16
 echo -e "Run experiment\tbf16\n===============================\n"
@@ -19,8 +19,8 @@ uv run train_single.py \
     -m EleutherAI/pythia-160m \
     --dtype bf16 \
     -s 512 \
-    --batch-size 16 \
-    --num-epochs 5
+    --batch-size 256 \
+    --num-epochs 1
 echo -e "===============================\nFinished experiment:\tbf16\n"
 # 3. bf16 + activation checkpointing
 echo -e "Run experiment:\tbf16+activation checkpointing\n===============================\n"
@@ -32,6 +32,6 @@ uv run train_single.py \
     --dtype bf16 \
     -s 512 \
     --activation-checkpointing \
-    --batch-size 16 \
-    --num-epochs 5
+    --batch-size 256 \
+    --num-epochs 1
 echo -e "===============================\nFinished experiment:\tbf16+activation checkpointing\n"
