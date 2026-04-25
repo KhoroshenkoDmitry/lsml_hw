@@ -38,6 +38,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-s', '--seq-length', default=1024, type=int)
     parser.add_argument('--dtype', default='bf16', choices=['fp32', 'bf16'])
     parser.add_argument('--activation-checkpointing', action='store_true')
+    parser.add_argument('--grad-accum-steps', default=1, type=int)
+
     return parser
 
 
@@ -159,24 +161,31 @@ def main(args: argparse.Namespace) -> None:  # noqa: C901, PLR0915, PLR0912
 
             with timers['forward']:
                 outputs = model(**batch)
+                loss = outputs.loss / args.grad_accum_steps
                 del batch
 
             with timers['backward']:
-                outputs.loss.backward()
+                loss.backward()
+
+            is_accum_boundary = (i_step + 1) % args.grad_accum_steps == 0
 
             with timers['update']:
-                optimizer.step()
-                lr_scheduler.step()
-                # NOTE: set_to_none=True will de-allocate the gradients, saving us some memory
-                optimizer.zero_grad(set_to_none=True)
+                if is_accum_boundary:
+                    optimizer.step()
+                    lr_scheduler.step()
+                    optimizer.zero_grad(set_to_none=True)
 
-            state['global_step'] += 1
             state['epoch_step'] += 1
-            state['running_loss'] += outputs.loss.item()
+            state['running_loss'] += loss.item() * args.grad_accum_steps
             progress_bar.update(1)
 
+            if not is_accum_boundary:
+                continue 
+
+            state['global_step'] += 1
+
             if state['global_step'] % args.log_freq == 0:
-                tok_per_step = args.batch_size * args.seq_length
+                tok_per_step = args.batch_size * args.seq_length * args.grad_accum_steps
                 ms_per_step = sum(t.avg_elapsed_ms() for t in timers.values())
                 info = {
                     'global_step': state['global_step'],
