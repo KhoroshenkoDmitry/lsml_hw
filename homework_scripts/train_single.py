@@ -26,7 +26,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--experiment-name', default=None)
     parser.add_argument('-d', '--dataset-name', default=None, required=True)
-    parser.add_argument('--dataset-subset', default=None)
+    parser.add_argument('-ds', '--dataset-subset', default=None)
     parser.add_argument('-m', '--model-name', default=None, required=True)
     parser.add_argument('--save-dir', default='outputs')
     parser.add_argument('--seed', default=42, type=int)
