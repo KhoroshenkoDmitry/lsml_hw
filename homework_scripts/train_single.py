@@ -36,6 +36,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--log-freq', default=10, type=int)
     parser.add_argument('--ckpt-freq', default=500, type=int)
     parser.add_argument('-s', '--seq-length', default=1024, type=int)
+    parser.add_argument('--dtype', default='bf16', choices=['fp32', 'bf16'])
+    parser.add_argument('--activation-checkpointing', action='store_true')
     return parser
 
 
@@ -49,7 +51,7 @@ def main(args: argparse.Namespace) -> None:  # noqa: C901, PLR0915, PLR0912
     LOGGER.debug(args)
 
     device = torch.device('cuda')
-    dtype = torch.bfloat16
+    dtype = {'fp32': torch.float32, 'bf16': torch.bfloat16}[args.dtype]
 
     torch.manual_seed(args.seed)
 
@@ -59,7 +61,8 @@ def main(args: argparse.Namespace) -> None:  # noqa: C901, PLR0915, PLR0912
         config = AutoConfig.from_pretrained(args.model_name, use_cache=False)
         model = AutoModelForCausalLM.from_config(config, dtype=dtype)
     LOGGER.info(f'Training {sum(p.numel() for p in model.parameters())} model parameters')
-
+    if args.activation_checkpointing:
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
     model = torch.compile(model)  # type: ignore[assignment]
 
     LOGGER.info(f'Initialized model uses {get_mem_stats(device)["curr_alloc_gb"]}gb')
