@@ -23,6 +23,7 @@ echo -e "Previous experiments deleted\n"
 echo -e "Run experiment\tNO_SHARD\n===============================\n"
 uv run torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
     --experiment-name fsdp-no_shard \
+    --no-compile \
     --sharding-strategy no_shard \
     "${COMMON_ARGS[@]}" \
     2>&1 | tee outputs/fsdp-no_shard.log
