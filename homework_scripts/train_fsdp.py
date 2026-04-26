@@ -13,7 +13,7 @@ import tqdm
 from torch import distributed as dist
 from torch.distributed.device_mesh import init_device_mesh
 from torch.distributed.elastic.multiprocessing.errors import record
-from torch.distributed.fsdp import fully_shard
+from torch.distributed.fsdp import fully_shard, CPUOffloadPolicy
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -48,14 +48,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--sharding-strategy',
         choices=['no_shard', 'shard_grad_op', 'full_shard'],
-        required=True,
-        help='no_shard=DDP, shard_grad_op=FSDP2 reshard_after_forward=False, full_shard=FSDP2 reshard_after_forward=True',
+        required=True
     )
-    parser.add_argument(
-        '--no-compile',
-        action='store_true',
-        help='Disable torch.compile (useful if FSDP2 + compile glitches)',
-    )
+    parser.add_argument('--no-compile', action='store_true')
+    parser.add_argument('--cpu-offload', action='store_true')
     return parser
 
 
@@ -64,10 +60,10 @@ def wrap_model_for_strategy(
     strategy: str,
     mesh: Any,
     local_rank: int,
+    cpu_offload : bool = False
 ) -> torch.nn.Module:
     """Apply the requested sharding strategy and return the (possibly wrapped) model."""
     if strategy == 'no_shard':
-        # Pure DDP — full replication of params/grads/optim states.
         return DistributedDataParallel(
             model,
             device_ids=[local_rank],
@@ -75,11 +71,9 @@ def wrap_model_for_strategy(
             gradient_as_bucket_view=True,
         )
 
-    # FSDP2 path. Shard each transformer block + the root.
-    # For pythia (GPTNeoX) the layers live at model.gpt_neox.layers.
-    # If you swap to another arch, adjust this attribute path.
+   
     reshard_after_forward = strategy == 'full_shard'
-
+    offload_policy = CPUOffloadPolicy() if cpu_offload else None
     # Try common attribute paths — be defensive across HF model variants.
     transformer_layers = None
     for attr_path in (
@@ -103,8 +97,8 @@ def wrap_model_for_strategy(
         )
 
     for layer in transformer_layers:
-        fully_shard(layer, mesh=mesh, reshard_after_forward=reshard_after_forward)
-    fully_shard(model, mesh=mesh, reshard_after_forward=reshard_after_forward)
+        fully_shard(layer, mesh=mesh, reshard_after_forward=reshard_after_forward, offload_policy=offload_policy)
+    fully_shard(model, mesh=mesh, reshard_after_forward=reshard_after_forward, offload_policy=offload_policy)
     return model
 
 
@@ -147,7 +141,7 @@ def main(args: argparse.Namespace) -> None:  # noqa: C901, PLR0915, PLR0912
 
     # Build a 1D mesh across all ranks for FSDP2.
     mesh = init_device_mesh('cuda', (world_size,))
-    model = wrap_model_for_strategy(model, args.sharding_strategy, mesh, local_rank)
+    model = wrap_model_for_strategy(model, args.sharding_strategy, mesh, local_rank, cpu_offload=args.cpu_offload)
 
     LOGGER.info(f'After wrap: model uses {get_mem_stats(device)["curr_alloc_gb"]}gb')
 
