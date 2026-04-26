@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
- 
-# global_batch_size = 131072 tokens
-# = seq_len(512) * local_batch(16) * world_size(4) * grad_accum(4)
+
 COMMON_ARGS=(
     -d Salesforce/wikitext
     -ds wikitext-103-v1
@@ -13,47 +11,47 @@ COMMON_ARGS=(
     --grad-accum-steps 4
     --num-epochs 1
 )
- 
+
 NPROC=4
- 
+
 echo -e "Delete previous experiments\n"
 rm -rf outputs/fsdp-no_shard outputs/fsdp-shard_grad_op outputs/fsdp-full_shard \
        outputs/fsdp-no_shard.log outputs/fsdp-shard_grad_op.log outputs/fsdp-full_shard.log
 echo -e "Previous experiments deleted\n"
- 
+
 # 1. NO_SHARD (DDP)
 echo -e "Run experiment\tNO_SHARD\n===============================\n"
-torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
+uv run torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
     --experiment-name fsdp-no_shard \
     --sharding-strategy no_shard \
     "${COMMON_ARGS[@]}" \
     2>&1 | tee outputs/fsdp-no_shard.log
 echo -e "===============================\nFinished experiment\tNO_SHARD\n"
- 
+
 # 2. SHARD_GRAD_OP (FSDP2, reshard_after_forward=False)
 echo -e "Run experiment\tSHARD_GRAD_OP\n===============================\n"
-torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
+uv run torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
     --experiment-name fsdp-shard_grad_op \
     --sharding-strategy shard_grad_op \
     "${COMMON_ARGS[@]}" \
     2>&1 | tee outputs/fsdp-shard_grad_op.log
 echo -e "===============================\nFinished experiment:\tSHARD_GRAD_OP\n"
- 
+
 # 3. FULL_SHARD (FSDP2, reshard_after_forward=True)
 echo -e "Run experiment:\tFULL_SHARD\n===============================\n"
-torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
+uv run torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
     --experiment-name fsdp-full_shard \
     --sharding-strategy full_shard \
     "${COMMON_ARGS[@]}" \
     2>&1 | tee outputs/fsdp-full_shard.log
 echo -e "===============================\nFinished experiment:\tFULL_SHARD\n"
- 
+
 # results
 echo -e "\n===== RESULTS =====\n"
- 
+
 echo "--- Val PPL ---"
 grep "perplexity:" outputs/fsdp-*.log
- 
+
 echo ""
 echo -e "--- Strategy\tPeak mem/GPU (GB)\tThroughput (tok/s)\tVal PPL ---"
 for cfg in no_shard shard_grad_op full_shard; do
