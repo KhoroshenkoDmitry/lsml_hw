@@ -1,3 +1,4 @@
+STRATEGIES=(no_shard shard_grad_op full_shard)
 print_table() {
     local model_short="$1"
     echo ""
