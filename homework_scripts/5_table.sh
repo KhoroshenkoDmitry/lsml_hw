@@ -11,7 +11,7 @@ print_table() {
             tps=$(grep "rank=0" "$log" | grep -oP "'tokens_per_s': \K[\d.]+" \
                 | tail -n +3 \
                 | awk '{sum+=$1; n++} END {if(n>0) printf "%.1f", sum/n; else print "N/A"}')
-            val_ppl=$(grep -oP 'perplexity: \K[\d.]+' "$log" | tail -1)
+            val_ppl=$(grep -oP 'perplexity: \K(?:[\d.]+|inf|nan)' "$log" | tail -1)
             printf "%-20s %-22s %-22s %-12s\n" "$strategy" "${peak:-N/A}" "${tps:-N/A}" "${val_ppl:-N/A}"
         else
             printf "%-20s missing log\n" "$strategy"
