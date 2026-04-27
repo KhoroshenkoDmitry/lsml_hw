@@ -10,9 +10,19 @@ COMMON_ARGS=(
     --grad-accum-steps 16 
     --num-epochs 1
 )
-echo -e "Delete previous experiments\n"
-rm -rf outputs/baseline-fp32 outputs/baseline-bf16 outputs/baseline-bf16-ckpt outputs/baseline-fp32.log outputs/baseline-bf16.log outputs/baseline-bf16-ckpt.log
-echo -e "Previous experiments deleted\n"
+is_deleting_previous=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clean) is_deleting_previous=1; shift ;;
+        *) echo "Unknown arg: $1"; exit 1 ;;
+    esac
+done
+
+if [ "$is_deleting_previous" -eq 1]; then
+    echo -e "Delete previous experiments\n"
+    rm -rf outputs/baseline-fp32 outputs/baseline-bf16 outputs/baseline-bf16-ckpt outputs/baseline-fp32.log outputs/baseline-bf16.log outputs/baseline-bf16-ckpt.log
+    echo -e "Previous experiments deleted\n"
+fi
 echo -e "Run experiment\tfp32\n===============================\n"
 uv run train_single.py \
     --experiment-name baseline-fp32 \

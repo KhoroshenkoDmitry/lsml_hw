@@ -11,22 +11,30 @@ COMMON_ARGS=(
     --batch-size 16
     --grad-accum-steps 4
     --num-epochs 1
+    --no-compile
 )
 
 NPROC=4
 MODELS=(pythia-160m pythia-410m)
 STRATEGIES=(no_shard shard_grad_op full_shard)
 
-mkdir -p outputs
-
-echo -e "Delete previous experiments\n"
-for model_short in 160m 410m; do
-    for strategy in "${STRATEGIES[@]}"; do
-        rm -rf "outputs/fsdp-${model_short}-${strategy}"
-        rm -f  "outputs/fsdp-${model_short}-${strategy}.log"
-    done
+is_deleting_previous=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clean) is_deleting_previous=1; shift ;;
+        *) echo "Unknown arg: $1"; exit 1 ;;
+    esac
 done
-echo -e "Previous experiments deleted\n"
+
+if [ "$is_deleting_previous" -eq 1 ]; then echo -e "Delete previous experiments\n"
+    for model_short in 160m 410m; do
+        for strategy in "${STRATEGIES[@]}"; do
+            rm -rf "outputs/fsdp-${model_short}-${strategy}"
+            rm -f  "outputs/fsdp-${model_short}-${strategy}.log"
+        done
+    done
+    echo -e "Previous experiments deleted\n"
+    fi
 
 # Run all 6 experiments: {160m, 410m} x {no_shard, shard_grad_op, full_shard}
 for model in "${MODELS[@]}"; do

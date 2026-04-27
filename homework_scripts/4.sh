@@ -11,12 +11,18 @@ COMMON_ARGS=(
     --num-epochs 1
     --sharding-strategy full_shard
 )
-
-echo -e "Delete previous experiments\n"
-rm -rf outputs/fsdp-full-shard-1-gpu outputs/fsdp-full-shard-2-gpu outputs/fsdp-full-shard-4-gpu \
-       outputs/fsdp-full-shard-1-gpu.log outputs/fsdp-full-shard-2-gpu.log outputs/fsdp-full-shard-4-gpu.log
-echo -e "Previous experiments deleted\n"
-
+is_deleting_previous=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clean) is_deleting_previous=1; shift ;;
+        *) echo "Unknown arg: $1"; exit 1 ;;
+    esac
+done
+if [ "$is_deleting_previous" -eq 1 ]; then echo -e "Delete previous experiments\n"
+    rm -rf outputs/fsdp-full-shard-1-gpu outputs/fsdp-full-shard-2-gpu outputs/fsdp-full-shard-4-gpu \
+        outputs/fsdp-full-shard-1-gpu.log outputs/fsdp-full-shard-2-gpu.log outputs/fsdp-full-shard-4-gpu.log
+    echo -e "Previous experiments deleted\n"
+fi
 # 1 GPU
 echo -e "Run experiment:\tFULL SHARD 1 GPU\n===============================\n"
 uv run torchrun --standalone --nproc_per_node=1 train_fsdp.py \

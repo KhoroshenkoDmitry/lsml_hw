@@ -14,11 +14,20 @@ COMMON_ARGS=(
 
 NPROC=4
 
-echo -e "Delete previous experiments\n"
-rm -rf outputs/fsdp-no_shard outputs/fsdp-shard_grad_op outputs/fsdp-full_shard \
-       outputs/fsdp-no_shard.log outputs/fsdp-shard_grad_op.log outputs/fsdp-full_shard.log
-echo -e "Previous experiments deleted\n"
+is_deleting_previous=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clean) is_deleting_previous=1; shift ;;
+        *) echo "Unknown arg: $1"; exit 1 ;;
+    esac
+done
 
+if [ "$is_deleting_previous" -eq 1 ]; then
+echo -e "Delete previous experiments\n"
+    rm -rf outputs/fsdp-no_shard outputs/fsdp-shard_grad_op outputs/fsdp-full_shard \
+           outputs/fsdp-no_shard.log outputs/fsdp-shard_grad_op.log outputs/fsdp-full_shard.log
+    echo -e "Previous experiments deleted\n"
+fi
 # 1. NO_SHARD (DDP)
 echo -e "Run experiment\tNO_SHARD\n===============================\n"
 uv run torchrun --standalone --nproc_per_node=${NPROC} train_fsdp.py \
