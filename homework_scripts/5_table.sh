@@ -23,7 +23,6 @@ print_table() {
 print_table "160m"
 print_table "410m"
 
-# ----- Comparison helpers -----
 echo -e "\n\n=== COMPARISON 160m vs 410m ===\n"
 printf "%-20s %-15s %-15s %-15s %-15s\n" "Strategy" "Peak 160m" "Peak 410m" "TPS 160m" "TPS 410m"
 echo "----------------------------------------------------------------------------------"
