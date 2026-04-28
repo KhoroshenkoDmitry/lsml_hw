@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if [ $# -ne 8 ]; then
+if [ $# -ne 6 ]; then
     echo "invalid count of arguments. Expected: 3, got: $(($#/2))"
     exit 1
 fi 
