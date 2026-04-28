@@ -4,7 +4,8 @@ set -e
 echo -e "\n===== RESULTS =====\n"
 
 echo "--- Val PPL ---"
-grep "perplexity:" outputs/fsdp-*.log
+grep -oE "epoch [0-9]+: perplexity: [0-9.]+ eval_loss: [0-9.]+" outputs/fsdp-no_shard.log \
+        outputs/fsdp-shard_grad_op.log outputs/fsdp-full_shard.log
 
 echo ""
 echo -e "--- Strategy\tPeak mem/GPU (GB)\tThroughput (tok/s)\tVal PPL ---"
