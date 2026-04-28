@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-if [ $# -ne 6 ]; then
-    echo "invalid count of agruments pairs. Expected: 3, got: $(($#/2))"
+if [ $# -ne 8 ]; then
+    echo "invalid count of agruments pairs. Expected: 4, got: $(($#/2))"
     exit 1
 fi 
 NUMERATOR=""
