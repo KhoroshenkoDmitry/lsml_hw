@@ -28,4 +28,5 @@ done
 if [ NUMERATOR -eq  "NaN" ]; then 
     echo "I expected to get a global batch size :'("
     exit 1
+fi
 echo $((NUMERATOR / DENOMINATOR))
