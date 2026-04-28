@@ -5,12 +5,12 @@ if [ $# -ne 6 ]; then
     echo "invalid count of arguments. Expected: 3, got: $(($#/2))"
     exit 1
 fi 
-NUMERATOR="NaN"
+NUMERATOR=""
 DENOMINATOR="1"
 while [ $# -gt 0 ]; do
     case "$1" in
     -s|--seq_len|-b|--local_batch_size|-d|--dp_size|-ga|--grad_accumulation_steps)
-        DENUMERATOR=$((DENOMINATOR * "$2"))
+        DENOMINATOR=$((DENOMINATOR * "$2"))
         shift
         shift
         ;;
@@ -25,7 +25,7 @@ while [ $# -gt 0 ]; do
         ;;
     esac
 done
-if [ NUMERATOR -eq  "NaN" ]; then 
+if [ -z "$NUMERATOR" ]; then 
     echo "I expected to get a global batch size :'("
     exit 1
 fi
