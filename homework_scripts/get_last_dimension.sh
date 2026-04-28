@@ -2,7 +2,7 @@
 set -e
 
 if [ $# -ne 6 ]; then
-    echo "invalid count of arguments. Expected: 3, got: $(($#/2))"
+    echo "invalid count of agruments pairs. Expected: 3, got: $(($#/2))"
     exit 1
 fi 
 NUMERATOR=""
