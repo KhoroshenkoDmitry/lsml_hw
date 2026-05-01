@@ -3,9 +3,6 @@ set -e
 
 echo -e "\n===== RESULTS =====\n"
 
-echo "--- Val PPL ---"
-grep -oE "epoch [0-9]+: perplexity: [0-9.]+ eval_loss: [0-9.]+" outputs/fsdp-full-shard-1-gpu.log \
-        outputs/fsdp-full-shard-2-gpu.log outputs/fsdp-full-shard-4-gpu.log
 echo ""
 printf "%-8s %-22s %-22s %-22s %-12s\n" "N GPU" "Throughput total (tok/s)" "Throughput per GPU (tok/s)" "Peak mem/GPU (GB)" "Val PPL"
 echo "----------------------------------------------------------------------------------------------------"

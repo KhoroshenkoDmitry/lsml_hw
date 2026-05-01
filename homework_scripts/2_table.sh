@@ -3,11 +3,6 @@ set -e
 
 echo -e "\n===== RESULTS =====\n"
 
-echo "--- Val PPL ---"
-grep -oE "epoch [0-9]+: perplexity: [0-9.]+ eval_loss: [0-9.]+" outputs/fsdp-no_shard.log \
-        outputs/fsdp-shard_grad_op.log outputs/fsdp-full_shard.log
-
-echo ""
 echo -e "--- Strategy\tPeak mem/GPU (GB)\tThroughput (tok/s)\tVal PPL ---"
 for cfg in no_shard shard_grad_op full_shard; do
     log="outputs/fsdp-${cfg}.log"
