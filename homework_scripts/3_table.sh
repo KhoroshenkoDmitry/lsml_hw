@@ -4,7 +4,7 @@ set -e
 echo -e "\n===== RESULTS =====\n"
 
 echo ""
-echo -e "--- Strategy\tPeak mem/GPU (GB)\tThroughput (tok/s)\tVal PPL ---"
+echo -e "--- Strategy\tPeak mem/GPU (GB)\tThroughput (tok/s) ---"
 for cfg in full-shard-noCPU full-shard-CPU full-shard-CPU-checkpointing; do
     log="outputs/fsdp-${cfg}.log"
     if [ -f "$log" ]; then
